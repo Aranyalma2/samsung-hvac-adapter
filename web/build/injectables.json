@@ -1,0 +1,7 @@
+[
+    { 
+        "pattern": "VERSION",
+        "type": "string",
+        "replacement": "v1.0.0"
+    }
+]
