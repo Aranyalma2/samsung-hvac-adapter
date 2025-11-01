@@ -349,6 +349,57 @@ app.get("/api/modbus/group", (req, res) => {
 });
 
 // ============================================================
+// ROUTES: REGISTER MAP
+// ============================================================
+
+app.get("/api/map", (req, res) => {
+	const groups = mockData.modbus.map((group) => {
+		const registers = [];
+		let address = 0;
+
+		// Add group-level registers
+		group.registers.forEach((reg) => {
+			registers.push({
+				address: address,
+				id: reg.id,
+				name: reg.name,
+				type: "group",
+				slave_id: 0,
+			});
+			address++;
+		});
+
+		// Add slave registers
+		group.slaves.forEach((slave) => {
+			slave.registers.forEach((reg) => {
+				registers.push({
+					address: address,
+					id: reg.id,
+					name: reg.name,
+					type: "slave",
+					slave_id: slave.id,
+					slave_name: `Indoor ${slave.id}`,
+				});
+				address++;
+			});
+		});
+
+		return {
+			id: group.id,
+			name: group.name,
+			registers: registers,
+			total_registers: address,
+		};
+	});
+
+	res.json({
+		initialized: mockData.modbus.length > 0,
+		total_groups: mockData.modbus.length,
+		groups: groups,
+	});
+});
+
+// ============================================================
 // ROUTES: REGISTER MANAGEMENT
 // ============================================================
 
@@ -594,4 +645,5 @@ app.listen(PORT, () => {
 	console.log("  PATCH  /api/modbus/group/update/register?id={id}&slave={slave}&registerId={registerId}");
 	console.log("  DELETE /api/modbus/group/update/register?id={id}&slave={slave}&registerId={registerId}");
 	console.log("  GET    /api/modbus/group?id={id}");
+	console.log("  GET    /api/map");
 });
