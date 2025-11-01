@@ -6,6 +6,7 @@
 class LocalWebServer {
 public:
     static void start();
+    static AsyncWebServer& getServer() { return server; }
 
 private:
     static AsyncWebServer server;
