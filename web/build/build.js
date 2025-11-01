@@ -116,7 +116,7 @@ async function injectPatterns(template, injections) {
 
 async function main() {
 
-  const dist = path.resolve('../firmware/data');
+  const dist = path.resolve('../firmware/data/public');
   await fs.rm(dist, { recursive: true, force: true });
   await ensureDir(dist);
 
