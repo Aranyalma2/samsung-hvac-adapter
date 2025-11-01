@@ -338,10 +338,10 @@ app.get("/api/modbus/group", (req, res) => {
 
 	const response = {
 		id: group.id,
-		register: getGroupRegisters(group.id),
+		registers: getGroupRegisters(group.id),
 		slaves: group.slaves.map((slave) => ({
 			id: slave.id,
-			register: getSlaveRegisters(group.id, slave.id),
+			registers: getSlaveRegisters(group.id, slave.id),
 		})),
 	};
 
