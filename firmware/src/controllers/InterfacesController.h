@@ -5,6 +5,7 @@
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include "../services/InterfacesService.h"
+#include "../utils.h"
 
 /**
  * InterfacesController handles /api/interfaces endpoints

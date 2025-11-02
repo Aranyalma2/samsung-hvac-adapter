@@ -46,17 +46,17 @@ public:
         // POST /api/modbus/group/update/register - Add register
         server.on("/api/modbus/group/update/register", HTTP_POST, [](AsyncWebServerRequest *request) {
             handlePostRegister(request);
+            RegisterMappingService::buildMapping();
         }, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
             handlePostRegisterBody(request, data, len, index, total);
-            RegisterMappingService::buildMapping();
         });
         
         // PATCH /api/modbus/group/update/register - Update register
         server.on("/api/modbus/group/update/register", HTTP_PATCH, [](AsyncWebServerRequest *request) {
             handlePatchRegister(request);
+            RegisterMappingService::buildMapping();
         }, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
             handlePatchRegisterBody(request, data, len, index, total);
-            RegisterMappingService::buildMapping();
         });
         
         // DELETE /api/modbus/group/update/register - Delete register
