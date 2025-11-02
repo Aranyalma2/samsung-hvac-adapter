@@ -77,7 +77,6 @@ private:
             postData = "";
             return;
         }
-        Serial.println(postData);
         // Parse new configuration
         JsonObject docObj = doc.as<JsonObject>();
         InterfacesData newConfig = InterfacesData::fromJson(docObj);
@@ -109,14 +108,18 @@ private:
         // Success response
         AsyncJsonResponse* response = new AsyncJsonResponse();
         JsonObject obj = response->getRoot().as<JsonObject>();
-        obj["message"] = "Settings saved successfully";
+        obj["message"] = "Settings saved successfully, device will restart to apply changes";
         
         auto dataObj = obj.createNestedObject("data");
         newConfig.toJson(dataObj);
         
         response->setLength();
         request->send(response);
+
         postData = "";
+        
+        // Restart device to apply new settings
+        utils::scheduleRestart(2000, "Applying new interface settings");
     }
 };
 
