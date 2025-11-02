@@ -73,12 +73,19 @@ nav a.active {
 }
 
 .nav_version {
-    display: block
+    display: block;
+    border-left: 3px solid transparent
 }
 
 .nav_dev {
     display: block;
-    color: #7f8c8d
+}
+
+.nav_dev a {
+    padding: 0;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .content {
