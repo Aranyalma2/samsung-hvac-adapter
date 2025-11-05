@@ -65,6 +65,8 @@ function initializeDashboardMetrics() {
 		"UART 2 Received Packets",
 		"Ethernet Status",
 		"Ethernet IP",
+		"Pending Requests",
+		"Polling Delay",
 	];
 
 	const metricsHtml = metricLabels
@@ -94,6 +96,8 @@ async function updateDashboardMetrics() {
 			String(statusData.uart2_recived),
 			statusData.eth_status,
 			statusData.eth_ip || "None",
+			String(statusData.ongoing_requests),
+			String(statusData.poll_delay_ms) + " ms",
 		];
 
 		document.querySelectorAll(".metric_value").forEach((element, index) => {
