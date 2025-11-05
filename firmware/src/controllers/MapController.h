@@ -26,6 +26,7 @@ public:
             for (const auto& group : groups) {
                 JsonObject groupObj = groupsArray.add<JsonObject>();
                 groupObj["id"] = group.id;
+                groupObj["remote_address"] = group.remoteAddress;
                 groupObj["name"] = group.name;
                 
                 JsonArray registersArray = groupObj["registers"].to<JsonArray>();

@@ -122,7 +122,7 @@ private:
     }
     
     /**
-     * POST /api/modbus/group/create?id={group-id}&slave={slave-count}
+     * POST /api/modbus/group/create?id={group-id}&slave={slave-count}&remote={remote-address}
      * Creates a new group
      */
     static void handleCreateGroup(AsyncWebServerRequest *request) {
@@ -136,13 +136,18 @@ private:
         }
         
         uint8_t groupId = request->getParam("id")->value().toInt();
+        uint8_t remoteAddress = groupId; // Default to same as local ID
         uint8_t slaveCount = 0;
+        
+        if (request->hasParam("remote")) {
+            remoteAddress = request->getParam("remote")->value().toInt();
+        }
         
         if (request->hasParam("slave")) {
             slaveCount = request->getParam("slave")->value().toInt();
         }
         
-        if (!ModbusService::createGroup(groupId, slaveCount)) {
+        if (!ModbusService::createGroup(groupId, slaveCount, remoteAddress)) {
             AsyncJsonResponse* response = new AsyncJsonResponse();
             response->setCode(400);
             response->getRoot()["error"] = "Failed to create group (may already exist)";
@@ -163,8 +168,8 @@ private:
     }
     
     /**
-     * PATCH /api/modbus/group/update?id={group-id}&slave={new-slave-count}
-     * Updates number of slaves in a group
+     * PATCH /api/modbus/group/update?id={group-id}&newid={new-id}&slave={new-slave-count}&remote={remote-address}
+     * Updates local ID, number of slaves and/or remote address in a group
      */
     static void handleUpdateGroup(AsyncWebServerRequest *request) {
         if (!request->hasParam("id") || !request->hasParam("slave")) {
@@ -178,6 +183,33 @@ private:
         
         uint8_t groupId = request->getParam("id")->value().toInt();
         uint8_t slaveCount = request->getParam("slave")->value().toInt();
+        
+        // Update local ID if provided
+        if (request->hasParam("newid")) {
+            uint8_t newId = request->getParam("newid")->value().toInt();
+            if (!ModbusService::updateGroupLocalId(groupId, newId)) {
+                AsyncJsonResponse* response = new AsyncJsonResponse();
+                response->setCode(400);
+                response->getRoot()["error"] = "Failed to update local ID (may already exist)";
+                response->setLength();
+                request->send(response);
+                return;
+            }
+            groupId = newId; // Use new ID for subsequent operations
+        }
+        
+        // Update remote address if provided
+        if (request->hasParam("remote")) {
+            uint8_t remoteAddress = request->getParam("remote")->value().toInt();
+            if (!ModbusService::updateGroupRemoteAddress(groupId, remoteAddress)) {
+                AsyncJsonResponse* response = new AsyncJsonResponse();
+                response->setCode(404);
+                response->getRoot()["error"] = "Group not found";
+                response->setLength();
+                request->send(response);
+                return;
+            }
+        }
         
         if (!ModbusService::updateGroup(groupId, slaveCount)) {
             AsyncJsonResponse* response = new AsyncJsonResponse();

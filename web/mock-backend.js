@@ -35,6 +35,7 @@ let mockData = {
 	modbus: [
 		{
 			id: 1,
+			remote_address: 1,
 			name: "Outdoor Device A",
 			registers: [
 				{ id: 1, name: "Temperature" },
@@ -62,6 +63,7 @@ let mockData = {
 		},
 		{
 			id: 2,
+			remote_address: 5,
 			name: "Outdoor Device B",
 			registers: [
 				{ id: 4, name: "Voltage" },
@@ -208,7 +210,7 @@ app.get("/api/modbus/groups", (req, res) => {
 });
 
 app.post("/api/modbus/group/create", (req, res) => {
-	const { id, slave } = req.query;
+	const { id, slave, remote } = req.query;
 
 	if (!id || slave === undefined) {
 		return res.status(400).json({ error: "Missing id or slave parameter" });
@@ -216,6 +218,7 @@ app.post("/api/modbus/group/create", (req, res) => {
 
 	const groupId = parseInt(id);
 	const slavesCount = parseInt(slave);
+	const remoteAddress = remote !== undefined ? parseInt(remote) : groupId;
 
 	// Check if group already exists
 	if (mockData.modbus.some((g) => g.id === groupId)) {
@@ -225,6 +228,7 @@ app.post("/api/modbus/group/create", (req, res) => {
 	// Create new group
 	const newGroup = {
 		id: groupId,
+		remote_address: remoteAddress,
 		name: `Outdoor Device ${String.fromCharCode(65 + mockData.modbus.length)}`,
 		registers: [],
 		slaves: [],
@@ -248,11 +252,11 @@ app.post("/api/modbus/group/create", (req, res) => {
 
 	mockData.modbus.push(newGroup);
 
-	res.json({ id: groupId, name: newGroup.name, slave: slavesCount });
+	res.json({ id: groupId, remote_address: remoteAddress, name: newGroup.name, slave: slavesCount });
 });
 
 app.patch("/api/modbus/group/update", (req, res) => {
-	const { id, slave } = req.query;
+	const { id, newid, slave, remote } = req.query;
 
 	if (!id || slave === undefined) {
 		return res.status(400).json({ error: "Missing id or slave parameter" });
@@ -267,6 +271,43 @@ app.patch("/api/modbus/group/update", (req, res) => {
 	}
 
 	const group = mockData.modbus[groupIndex];
+	
+	// Update local ID if provided
+	if (newid !== undefined) {
+		const newLocalId = parseInt(newid);
+		
+		// Check if new ID already exists (and it's not the same group)
+		if (newLocalId !== groupId && mockData.modbus.some((g) => g.id === newLocalId)) {
+			return res.status(400).json({ error: "Group with this ID already exists" });
+		}
+		
+		// Update the ID
+		group.id = newLocalId;
+		
+		// Also update register values keys
+		const oldGroupKey = `${groupId}_group`;
+		const newGroupKey = `${newLocalId}_group`;
+		if (mockData.registerValues[oldGroupKey]) {
+			mockData.registerValues[newGroupKey] = mockData.registerValues[oldGroupKey];
+			delete mockData.registerValues[oldGroupKey];
+		}
+		
+		// Update slave register values keys
+		group.slaves.forEach((slave) => {
+			const oldKey = `${groupId}_${slave.id}`;
+			const newKey = `${newLocalId}_${slave.id}`;
+			if (mockData.registerValues[oldKey]) {
+				mockData.registerValues[newKey] = mockData.registerValues[oldKey];
+				delete mockData.registerValues[oldKey];
+			}
+		});
+	}
+	
+	// Update remote address if provided
+	if (remote !== undefined) {
+		group.remote_address = parseInt(remote);
+	}
+	
 	const currentSlavesCount = group.slaves.length;
 
 	// Add new slaves if needed
@@ -289,7 +330,7 @@ app.patch("/api/modbus/group/update", (req, res) => {
 		group.slaves = group.slaves.slice(0, newSlavesCount);
 	}
 
-	res.json({ id: groupId, name: group.name, slave: newSlavesCount });
+	res.json({ id: groupId, remote_address: group.remote_address, name: group.name, slave: newSlavesCount });
 });
 
 app.delete("/api/modbus/group/delete", (req, res) => {
@@ -386,6 +427,7 @@ app.get("/api/map", (req, res) => {
 
 		return {
 			id: group.id,
+			remote_address: group.remote_address,
 			name: group.name,
 			registers: registers,
 			total_registers: address,

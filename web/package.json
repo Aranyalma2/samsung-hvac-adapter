@@ -2,10 +2,10 @@
 	"name": "samsung-hvac-adapter-mock-backend",
 	"version": "1.0.0",
 	"description": "Mock backend for Samsung HVAC Adapter",
-	"main": "server.js",
+	"main": "mock-backend.js",
 	"scripts": {
-		"start": "node server.js",
-		"dev": "nodemon server.js",
+		"start": "node mock-backend.js",
+		"dev": "nodemon mock-backend.js",
 		"build:frontend": "node ./build/build.js"
 	},
 	"keywords": [

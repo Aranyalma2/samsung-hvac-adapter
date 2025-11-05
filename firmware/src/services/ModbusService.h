@@ -61,14 +61,19 @@ public:
     /**
      * Create a new group
      */
-    static bool createGroup(uint8_t groupId, uint8_t slaveCount = 0) {
+    static bool createGroup(uint8_t groupId, uint8_t slaveCount = 0, uint8_t remoteAddress = 0) {
         // Check if group already exists
         if (getGroup(groupId)) {
             Serial.println("[ModbusService] Group already exists");
             return false;
         }
         
-        Group newGroup(groupId);
+        // If remoteAddress is 0, default to groupId
+        if (remoteAddress == 0) {
+            remoteAddress = groupId;
+        }
+        
+        Group newGroup(groupId, remoteAddress, "Outdoor Device " + String(groupId));
         newGroup.updateSlaveCount(slaveCount);
         groups.push_back(newGroup);
         
@@ -77,8 +82,59 @@ public:
             return false;
         }
         
-        Serial.print("[ModbusService] Created group ");
-        Serial.println(groupId);
+        Serial.printf("[ModbusService] Created group %d (remote: %d)\n", groupId, remoteAddress);
+        return true;
+    }
+    
+    /**
+     * Update group local ID (with duplicate check)
+     */
+    static bool updateGroupLocalId(uint8_t oldGroupId, uint8_t newGroupId) {
+        // If IDs are the same, nothing to do
+        if (oldGroupId == newGroupId) {
+            return true;
+        }
+        
+        // Check if new ID already exists
+        if (getGroup(newGroupId)) {
+            Serial.printf("[ModbusService] Group ID %d already exists\n", newGroupId);
+            return false;
+        }
+        
+        auto* group = getGroup(oldGroupId);
+        if (!group) {
+            Serial.println("[ModbusService] Group not found");
+            return false;
+        }
+        
+        group->id = newGroupId;
+        
+        if (!save()) {
+            group->id = oldGroupId; // Rollback
+            return false;
+        }
+        
+        Serial.printf("[ModbusService] Updated group local ID from %d to %d\n", oldGroupId, newGroupId);
+        return true;
+    }
+    
+    /**
+     * Update group remote address
+     */
+    static bool updateGroupRemoteAddress(uint8_t groupId, uint8_t remoteAddress) {
+        auto* group = getGroup(groupId);
+        if (!group) {
+            Serial.println("[ModbusService] Group not found");
+            return false;
+        }
+        
+        group->remoteAddress = remoteAddress;
+        
+        if (!save()) {
+            return false;
+        }
+        
+        Serial.printf("[ModbusService] Updated group %d remote address to %d\n", groupId, remoteAddress);
         return true;
     }
     

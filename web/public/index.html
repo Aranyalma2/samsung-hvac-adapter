@@ -129,7 +129,12 @@
       </div>
       <div class="modal_body">
         <div id="add_group_modal_message"></div>
-        <div class="modal_form_group"><label for="modal_group_id">Modbus Address</label> <input type="number" id="modal_group_id" placeholder="e.g., 1" min="0" max="255"></div>
+        <div class="modal_form_group"><label for="modal_group_id">Local Modbus Address (COM1)</label> <input type="number" id="modal_group_id" placeholder="e.g., 1" min="1" max="255">
+          <p class="modal_info_text">This address will be used on COM1 (incoming). Must be unique.</p>
+        </div>
+        <div class="modal_form_group"><label for="modal_group_remote">Remote Modbus Address (COM2)</label> <input type="number" id="modal_group_remote" placeholder="e.g., 1" min="1" max="255">
+          <p class="modal_info_text">This address will be used to communicate with the device on COM2 (outgoing).</p>
+        </div>
         <div class="modal_form_group"><label for="modal_group_slave">Number of Indoor Devices</label> <input type="number" id="modal_group_slave" placeholder="e.g., 1" min="0" max="255"></div>
       </div>
       <div class="modal_footer"><button type="button" class="btn_secondary" onclick="closeAddGroupModal()">Cancel</button> <button type="button" class="btn_primary" onclick="submitAddGroupModal()">Create Outdoor Device</button></div>
@@ -142,6 +147,12 @@
       </div>
       <div class="modal_body">
         <div id="edit_group_modal_message"></div>
+        <div class="modal_form_group"><label for="modal_edit_group_id">Local Modbus Address (COM1)</label> <input type="number" id="modal_edit_group_id" placeholder="e.g., 1" min="0" max="255">
+          <p class="modal_info_text">This address will be used on COM1 (incoming). Must be unique.</p>
+        </div>
+        <div class="modal_form_group"><label for="modal_edit_group_remote">Remote Modbus Address (COM2)</label> <input type="number" id="modal_edit_group_remote" placeholder="e.g., 1" min="0" max="255">
+          <p class="modal_info_text">This address will be used to communicate with the device on COM2.</p>
+        </div>
         <div class="modal_form_group"><label for="modal_edit_group_slave">Number of Indoor Devices</label> <input type="number" id="modal_edit_group_slave" placeholder="e.g., 1" min="0" max="255">
           <p class="modal_warning_text">⚠️ Warning: Decreasing the number of indoor devices will permanently delete all registers associated with the removed indoor devices.</p>
         </div>

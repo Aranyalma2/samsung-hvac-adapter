@@ -19,7 +19,6 @@ const applicationState = {
 		deleteGroupId: null,
 	},
 	mapState: {
-		data: null,
 		loading: false,
 	},
 };
@@ -370,6 +369,7 @@ function stopModbusRefresh() {
 function openAddGroupModal() {
 	document.getElementById("add_group_modal").classList.add("active");
 	document.getElementById("modal_group_id").value = "";
+	document.getElementById("modal_group_remote").value = "";
 	document.getElementById("modal_group_slave").value = "";
 	clearModalMessage("add_group_modal_message");
 	document.getElementById("modal_group_id").focus();
@@ -382,10 +382,11 @@ function closeAddGroupModal() {
 
 async function submitAddGroupModal() {
 	const groupId = document.getElementById("modal_group_id").value;
+	const remoteAddress = document.getElementById("modal_group_remote").value;
 	const slaveCount = document.getElementById("modal_group_slave").value;
 
-	if (!groupId || !slaveCount) {
-		showModalMessage("add_group_modal_message", "error", "Please enter both Modbus Address and Indoor Device Number");
+	if (!groupId || !remoteAddress || !slaveCount) {
+		showModalMessage("add_group_modal_message", "error", "Please enter all required fields");
 		return;
 	}
 
@@ -395,7 +396,7 @@ async function submitAddGroupModal() {
 		applicationState.modalsState.addGroupPending = true;
 		showModalMessage("add_group_modal_message", "loading", '<span class="loading_spinner"></span> Creating group...');
 
-		await apiCall("POST", `/api/modbus/group/create?id=${groupId}&slave=${slaveCount}`);
+		await apiCall("POST", `/api/modbus/group/create?id=${groupId}&remote=${remoteAddress}&slave=${slaveCount}`);
 
 		closeAddGroupModal();
 		await loadModbusConfig();
@@ -412,11 +413,14 @@ function openEditGroupModal(groupId) {
 
 	const group = applicationState.modbusState.groups.find((g) => g.id === groupId);
 	const slaveCount = group ? group.slaves.length : 0;
+	const remoteAddress = group ? group.remote_address : groupId;
 
 	document.getElementById("edit_group_modal").classList.add("active");
+	document.getElementById("modal_edit_group_id").value = groupId;
+	document.getElementById("modal_edit_group_remote").value = remoteAddress;
 	document.getElementById("modal_edit_group_slave").value = slaveCount;
 	clearModalMessage("edit_group_modal_message");
-	document.getElementById("modal_edit_group_slave").focus();
+	document.getElementById("modal_edit_group_remote").focus();
 }
 
 function closeEditGroupModal() {
@@ -426,11 +430,13 @@ function closeEditGroupModal() {
 }
 
 async function submitEditGroupModal() {
-	const groupId = applicationState.modalsState.editGroupId;
+	const oldGroupId = applicationState.modalsState.editGroupId;
+	const newGroupId = document.getElementById("modal_edit_group_id").value;
+	const remoteAddress = document.getElementById("modal_edit_group_remote").value;
 	const slaveCount = document.getElementById("modal_edit_group_slave").value;
 
-	if (!slaveCount) {
-		showModalMessage("edit_group_modal_message", "error", "Please enter number of indoor devices");
+	if (!newGroupId || !remoteAddress || !slaveCount) {
+		showModalMessage("edit_group_modal_message", "error", "Please enter all required fields");
 		return;
 	}
 
@@ -440,7 +446,7 @@ async function submitEditGroupModal() {
 		applicationState.modalsState.editGroupPending = true;
 		showModalMessage("edit_group_modal_message", "loading", '<span class="loading_spinner"></span> Updating group...');
 
-		await apiCall("PATCH", `/api/modbus/group/update?id=${groupId}&slave=${slaveCount}`);
+		await apiCall("PATCH", `/api/modbus/group/update?id=${oldGroupId}&newid=${newGroupId}&remote=${remoteAddress}&slave=${slaveCount}`);
 
 		closeEditGroupModal();
 		await loadModbusConfig();
@@ -644,10 +650,10 @@ async function addNewRegister() {
 		const registerId = parseInt(idInput.value);
 		const registerName = nameInput.value.trim();
 
-        if (isNaN(registerId) || !registerName) {
-            showModalMessage("register_modal_message", "error", "Please enter both Address and Name");
-            return;
-        }
+		if (isNaN(registerId) || !registerName) {
+			showModalMessage("register_modal_message", "error", "Please enter both Address and Name");
+			return;
+		}
 
 		if (registerModalState.registers.some((r) => r.id === registerId)) {
 			showModalMessage("register_modal_message", "error", "Register with this Address already exists");
@@ -796,13 +802,15 @@ function renderMapData(data) {
 		.map((group) => {
 			const registersHtml = group.registers
 				.map((reg) => {
-					const typeBadge = reg.type === "group" 
-						? '<span class="map_type_badge map_type_group">Group</span>'
-						: `<span class="map_type_badge map_type_slave">Slave ${reg.slave_id}</span>`;
-					
-					const deviceInfo = reg.type === "slave" 
-						? `<div class="map_device_info">${'Indoor ' + reg.slave_id}</div>`
-						: '<div class="map_device_info">Outdoor Device</div>';
+					const typeBadge =
+						reg.type === "group"
+							? '<span class="map_type_badge map_type_group">Group</span>'
+							: `<span class="map_type_badge map_type_slave">Slave ${reg.slave_id}</span>`;
+
+					const deviceInfo =
+						reg.type === "slave"
+							? `<div class="map_device_info">${"Indoor " + reg.slave_id}</div>`
+							: '<div class="map_device_info">Outdoor Device</div>';
 
 					return `
 						<tr>
@@ -821,6 +829,7 @@ function renderMapData(data) {
 					<div class="map_group_header">
 						<div>
 							<div class="map_group_title">${group.name}</div>
+							<div class="map_group_subtitle">Local: ${group.id} → Remote: ${group.remote_address}</div>
 						</div>
 						<div class="map_group_badge">${group.total_registers} registers</div>
 					</div>
@@ -828,7 +837,7 @@ function renderMapData(data) {
 						<thead>
 							<tr>
 								<th>Address</th>
-								<th>Remote Address</th>
+								<th>Register ID</th>
 								<th>Name</th>
 								<th>Type</th>
 								<th>Device</th>

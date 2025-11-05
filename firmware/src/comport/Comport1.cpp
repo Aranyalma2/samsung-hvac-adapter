@@ -2,6 +2,7 @@
 #include "Comport2.h"
 #include "../services/StatusService.h"
 #include "../services/RegisterMappingService.h"
+#include "../services/ModbusService.h"
 
 #define MAX_REGISTERS 65535
 
@@ -117,6 +118,10 @@ ModbusMessage Comport1::slaveHandlerFC06(ModbusMessage request) {
     return response;
   }
 
+  // Get remote address for this group
+  auto* group = ModbusService::getGroup(serverID);
+  uint8_t remoteAddress = group ? group->remoteAddress : serverID;
+  
   // Trigger write on COM2 (pass value directly, don't use global data)
   if (_comport2) {
     // Create token for tracking
@@ -125,7 +130,7 @@ ModbusMessage Comport1::slaveHandlerFC06(ModbusMessage request) {
     // Send write request to COM2 (FC06: WRITE_HOLD_REGISTER)
     bool success = _comport2->addRequest(
       token,
-      serverID,              // Slave address on COM2
+      remoteAddress,         // Use remote Modbus address on COM2
       WRITE_HOLD_REGISTER,   // FC06
       actualRegId,           // Actual register address
       value                  // Value to write

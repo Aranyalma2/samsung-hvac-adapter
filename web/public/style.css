@@ -550,6 +550,17 @@ button {
     line-height: 1.4
 }
 
+.modal_info_text {
+    color: #004085;
+    background-color: #cce5ff;
+    border: 1px solid #b8daff;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-top: 8px;
+    line-height: 1.4
+}
+
 .modal_large {
     max-width: 700px
 }
@@ -740,6 +751,13 @@ button {
 .map_group_title {
     font-size: 16px;
     font-weight: 600;
+}
+
+.map_group_subtitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #bdc3c7;
+    margin-top: 4px;
 }
 
 .map_group_badge {

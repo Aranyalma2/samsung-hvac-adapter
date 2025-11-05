@@ -139,7 +139,7 @@ private:
                     // Send holding register read request (function code 0x03)
                     bool success = comport->addRequest(
                         token,
-                        group.id,                    // Slave address = group ID
+                        group.remoteAddress,         // Use remote Modbus address on COM2
                         READ_HOLD_REGISTER,          // Function code 0x03
                         reg.id,                      // Register address
                         1                            // Read 1 register
@@ -173,7 +173,7 @@ private:
                         // Send holding register read request
                         bool success = comport->addRequest(
                             token,
-                            group.id,                // Slave address = group ID
+                            group.remoteAddress,     // Use remote Modbus address on COM2
                             READ_HOLD_REGISTER,      // Function code 0x03
                             reg.id,                  // Register address
                             1                        // Read 1 register

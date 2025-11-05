@@ -12,18 +12,21 @@
  */
 class Group {
 public:
-    uint8_t id;                         // Group ID / Modbus address (0-255)
+    uint8_t id;                         // Group ID / Local Modbus address on COM1 (0-255)
+    uint8_t remoteAddress;              // Remote Modbus address on COM2 (0-255)
     String name;                        // Group name (e.g., "Outdoor Device 1")
     std::vector<Register> registers;    // Group-level registers
     std::vector<Slave> slaves;          // List of slaves (indoor devices)
     
-    Group() : id(0), name("") {}
+    Group() : id(0), remoteAddress(0), name("") {}
     
-    explicit Group(uint8_t id) : id(id) {
+    explicit Group(uint8_t id) : id(id), remoteAddress(id) {
         name = "Outdoor Device " + String(id);
     }
     
-    Group(uint8_t id, const String& name) : id(id), name(name) {}
+    Group(uint8_t id, const String& name) : id(id), remoteAddress(id), name(name) {}
+    
+    Group(uint8_t id, uint8_t remote, const String& name) : id(id), remoteAddress(remote), name(name) {}
     
     // Add a new group-level register
     bool addRegister(const Register& reg) {
@@ -131,6 +134,7 @@ public:
     // Serialize to JSON
     void toJson(JsonObject& obj, bool withValues = true) const {
         obj["id"] = id;
+        obj["remote_address"] = remoteAddress;
         obj["name"] = name;
         
         auto regArray = obj.createNestedArray("registers");
@@ -152,7 +156,9 @@ public:
     
     // Deserialize from JSON
     static Group fromJson(const JsonObject& obj) {
-        Group group(obj["id"] | 0, obj["name"].as<String>());
+        uint8_t localId = obj["id"] | 0;
+        uint8_t remoteAddr = obj["remote_address"] | localId; // Default to local ID if not specified
+        Group group(localId, remoteAddr, obj["name"].as<String>());
         
         // Load registers
         if (obj.containsKey("registers")) {
